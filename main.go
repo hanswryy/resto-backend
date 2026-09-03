@@ -1,11 +1,14 @@
 package main
 
 import (
+  "context"
   "log"
   "os"
 
 	"resto-backend/internal/db"
   "resto-backend/internal/handlers"
+  "resto-backend/internal/middleware"
+  "resto-backend/internal/fcm"
 
 	"github.com/gin-gonic/gin"
   "github.com/joho/godotenv"
@@ -36,12 +39,30 @@ func main() {
   // Initialize the handler with the database connection and JWT secret
   h := handlers.New(pool, jwtSecret)
 
-  // Set up the Gin router and define routes
+  if credPath := os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON"); credPath != "" {
+    fmcClient, err := fcm.NewClient(context.Background(), credPath)
+    if err != nil {
+      log.Fatalf("Failed to initialize Firebase Cloud Messaging client: %v", err)
+    }
+    h.FCM = fmcClient
+    log.Println("Firebase Cloud Messaging client initialized successfully")
+  } else {
+    log.Println("FIREBASE_SERVICE_ACCOUNT_JSON environment variable is not set. FCM will not be initialized.")
+  }
+
+  router := setupRouter(h, jwtSecret)
+
+  if err := router.Run(":8080"); err != nil {
+    log.Fatalf("Failed to run server: %v", err)
+  }
+}
+
+func setupRouter(h *handlers.Handler, jwtSecret string) *gin.Engine {
   router := gin.Default()
 
   // Health check route
   router.GET("/health", func(c *gin.Context) {
-    if err := pool.Ping(c.Request.Context()); err != nil {
+    if err := h.DB.Ping(c.Request.Context()); err != nil {
       c.JSON(500, gin.H{"status": "unhealthy", "error": err.Error()})
       return
     }
@@ -54,8 +75,11 @@ func main() {
   // Menu routes
   router.GET("/menu", h.ListMenu)
   router.GET("/menu/:id", h.GetMenuItem)
+  
+  // Order routes (protected)
+  router.POST("/orders", middleware.RequireAuth(jwtSecret), h.CreateOrder)
+  router.GET("/orders/:id", middleware.RequireAuth(jwtSecret), h.GetOrder)
+  router.PATCH("/orders/:id/status", middleware.RequireAuth(jwtSecret), h.UpdateOrderStatus)
 
-  if err := router.Run(":8080"); err != nil {
-    log.Fatalf("Failed to run server: %v", err)
-  }
+  return router
 }

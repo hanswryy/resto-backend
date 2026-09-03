@@ -12,8 +12,9 @@ import (
 )
 
 type LoginRequest struct {
-	Email	string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Email		string `json:"email" binding:"required,email"`
+	Password	string `json:"password" binding:"required"`
+	DeviceToken	string `json:"device_token"` 
 }
 
 func (h *Handler) Login(c *gin.Context) {
@@ -46,6 +47,13 @@ func (h *Handler) Login(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
 		return
+	}
+
+	if req.DeviceToken != "" {
+		_, _ = h.DB.Exec(ctx,
+			`UPDATE users SET device_token = $1 WHERE id = $2`,
+			req.DeviceToken, userID,
+		)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": token})
