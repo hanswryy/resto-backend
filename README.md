@@ -184,15 +184,6 @@ Setup:
 Device token disimpan per user dan di-update melalui field opsional `device_token`
 pada `POST /auth/login`.
 
-## Testing & CI
-
-```bash
-go test ./...
-```
-
-GitHub Actions menjalankan `go test ./...` (dengan service PostgreSQL) di setiap push
-ke branch `main`. Konfigurasi di [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
-
 ## Screenshot Aplikasi
 
 Screenshot antarmuka mobile (React Native + Expo) tersedia di repo **resto-mobile**.
