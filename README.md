@@ -186,7 +186,7 @@ pada `POST /auth/login`.
 
 ## Screenshot Aplikasi
 
-Screenshot antarmuka mobile (React Native + Expo) tersedia di repo **resto-mobile**.
+Screenshot antarmuka mobile (React Native + Expo) tersedia di repo **resto-mobile** https://github.com/hanswryy/resto-mobile.
 
 <!-- TODO: tambahkan 2-3 screenshot frontend di sini setelah aplikasi mobile selesai -->
 <!-- Contoh:
