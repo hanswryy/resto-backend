@@ -39,6 +39,7 @@ func main() {
   // Set up the Gin router and define routes
   router := gin.Default()
 
+  // Health check route
   router.GET("/health", func(c *gin.Context) {
     if err := pool.Ping(c.Request.Context()); err != nil {
       c.JSON(500, gin.H{"status": "unhealthy", "error": err.Error()})
@@ -49,6 +50,10 @@ func main() {
 
   // Authentication routes
   router.POST("/auth/login", h.Login)
+
+  // Menu routes
+  router.GET("/menu", h.ListMenu)
+  router.GET("/menu/:id", h.GetMenuItem)
 
   if err := router.Run(":8080"); err != nil {
     log.Fatalf("Failed to run server: %v", err)
